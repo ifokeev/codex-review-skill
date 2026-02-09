@@ -1,0 +1,11 @@
+{
+  "name": "codex-review",
+  "version": "1.2.0",
+  "description": "Run OpenAI Codex CLI code review on current changes or review plans/designs",
+  "author": {
+    "name": "ifokeev",
+    "email": "vanya@vanya.cc"
+  },
+  "license": "MIT",
+  "keywords": ["code-review", "codex", "openai", "diff", "review"]
+}

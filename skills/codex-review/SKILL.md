@@ -3,7 +3,7 @@ name: codex-review
 description: "Run OpenAI Codex code review on current changes or review a plan/design. Use when user asks to review code, review implementation, or run codex review."
 user_invocable: true
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Codex Code Review
@@ -26,43 +26,31 @@ Use when the user wants to review **a plan, design, or suggested implementation*
 
 Indicators: "review the suggested implementation", "review this plan", "review the design", "review what was proposed", or when there are no relevant code changes on the branch.
 
-## Compact Prompt
-
-Always append a compact-output instruction to reduce context window usage.
-
-For **Mode A** (code diff):
-```
-COMPACT_PROMPT="Be concise. For each finding output ONLY: severity (critical/warning/info), file:line, and a one-line description. Group by severity. No code snippets unless critical. No preamble or summary paragraph."
-```
-
-For **Mode B** (plan/design):
-```
-COMPACT_PROMPT="Be concise. List issues as bullet points with severity (critical/warning/info). Focus on: missing edge cases, security concerns, scalability issues, incorrect assumptions. No lengthy explanations."
-```
-
 ## Mode A — Code Diff Review
+
+**Important**: Do NOT pass any prompt or arguments to `codex review` other than the flags shown below. It only accepts flags to select the review target.
 
 1. Run `git status` to check for uncommitted changes
 2. Choose the appropriate review target:
 
    **Uncommitted changes** (staged, unstaged, or untracked):
    ```bash
-   codex review --uncommitted "$COMPACT_PROMPT"
+   codex review --uncommitted
    ```
 
    **Specific commit SHA**:
    ```bash
-   codex review --commit <SHA> "$COMPACT_PROMPT"
+   codex review --commit <SHA>
    ```
 
    **Base branch comparison**:
    ```bash
-   codex review --base <BRANCH> "$COMPACT_PROMPT"
+   codex review --base <BRANCH>
    ```
 
    **No uncommitted changes** — review latest commit:
    ```bash
-   codex review --commit HEAD "$COMPACT_PROMPT"
+   codex review --commit HEAD
    ```
 
 3. Present the output and offer to help fix issues
@@ -78,7 +66,7 @@ Use `codex exec` in read-only sandbox mode. Pipe the plan text via stdin.
    codex exec --sandbox read-only -o /dev/stdout - <<'PLAN_EOF'
    Review the following implementation plan for a codebase at $PWD.
    Identify issues, missing edge cases, security concerns, and incorrect assumptions.
-   $COMPACT_PROMPT
+   Be concise. List issues as bullet points with severity (critical/warning/info).
 
    --- PLAN ---
    <paste plan text here>
@@ -96,12 +84,10 @@ Use `codex exec` in read-only sandbox mode. Pipe the plan text via stdin.
 
 ## Custom Instructions
 
-If the user provides arguments, prepend them to the compact prompt:
-```bash
-# Mode A
-codex review --uncommitted "focus on security. $COMPACT_PROMPT"
+For **Mode A**: `codex review` does not accept custom prompts. If the user provides custom focus areas (e.g. "focus on security"), run `codex review` as normal, then filter/highlight the relevant findings when presenting results.
 
-# Mode B
+For **Mode B**: prepend custom instructions to the prompt:
+```bash
 codex exec --sandbox read-only "focus on security. $REVIEW_PROMPT"
 ```
 
@@ -109,6 +95,5 @@ codex exec --sandbox read-only "focus on security. $REVIEW_PROMPT"
 
 - The `codex` CLI must be installed and authenticated (`codex login`)
 - Timeout should be generous (up to 5 minutes) as reviews can take time
-- The compact prompt keeps output short; if the user wants full verbose output, they can say `/codex-review --verbose` and you should omit the compact prompt
 - For Mode B, always use `--sandbox read-only` since no writes are needed
 
